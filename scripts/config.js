@@ -1,3 +1,4 @@
+// 与rollup构建不同版本相关的代码。
 const path = require('path')
 const alias = require('@rollup/plugin-alias')
 const cjs = require('@rollup/plugin-commonjs')
@@ -224,7 +225,12 @@ const builds = {
     ]
   }
 }
-
+/**
+ * 
+ * 这个函数接受的参数正是我们在打包命令中提供的环境变量TARGET。
+ * 我们再来粗略的看一下genConfig()函数，
+ * 它的主要作用依然是生成rollup几大核心配置，然后返回配置完毕后的对象。
+ */
 function genConfig(name) {
   const opts = builds[name]
   const isTargetingBrowser = !(
@@ -301,5 +307,6 @@ if (process.env.TARGET) {
   module.exports = genConfig(process.env.TARGET)
 } else {
   exports.getBuild = genConfig
+  // 导出关键代码：用于生成不同版本压缩文件
   exports.getAllBuilds = () => Object.keys(builds).map(genConfig)
 }

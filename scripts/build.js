@@ -1,3 +1,6 @@
+// rollup构建不同压缩版本Vue.js文件相关代码。
+// srcipts/build.js文件的作用就是通过配置然后生成不同版本的压缩文件，
+// 其中它获取配置的方式同样是在scripts/config.js文件中，
 const fs = require('fs')
 const path = require('path')
 const zlib = require('zlib')
@@ -7,7 +10,7 @@ const terser = require('terser')
 if (!fs.existsSync('dist')) {
   fs.mkdirSync('dist')
 }
-
+// 关键代码
 let builds = require('./config').getAllBuilds()
 
 // filter builds via command line arg
