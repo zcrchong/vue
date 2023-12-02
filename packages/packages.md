@@ -1,0 +1,1 @@
+Vue.js衍生的其它npm包，它们在Vue构建时自动从源码中生成并且始终和Vue.js保持相同的版本，主要是vue-server-renderer和vue-template-compiler这两个包，其中最后一个包在我们使用脚手架生成项目，也就是使用.vue文件开发Vue项目时会使用到这个包(vue-loader)。
