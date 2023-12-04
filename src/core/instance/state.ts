@@ -57,6 +57,9 @@ export function initState(vm: Component) {
   initSetup(vm)
 
   if (opts.methods) initMethods(vm, opts.methods)
+  /**
+   * 首先判断了opts.data，如果值为真则代表是子组件(子组件如果没有显示定义data，则使用默认值)，否则代表是根实例。对于根实例而言我们不需要执行initData的过程，只要对vm._data进行observe即可。
+   */
   if (opts.data) {
     initData(vm)
   } else {
@@ -121,9 +124,13 @@ function initProps(vm: Component, propsOptions: Object) {
   }
   toggleObserving(true)
 }
-
+/**
+ * 
+ * 类型判断取值、命名冲突判断、proxy代理以及observe(data)。
+ */
 function initData(vm: Component) {
   let data: any = vm.$options.data
+  // 类型判断
   data = vm._data = isFunction(data) ? getData(data, vm) : data || {}
   if (!isPlainObject(data)) {
     data = {}
@@ -161,7 +168,7 @@ function initData(vm: Component) {
   const ob = observe(data)
   ob && ob.vmCount++
 }
-
+// getData的取值过程包裹在try/catch中，通过data.call(vm, vm)进行调用返回，如果函数调用出错，则使用handleError进行错误统一处理。
 export function getData(data: Function, vm: Component): any {
   // #7573 disable dep collection when invoking data getters
   pushTarget()
@@ -279,10 +286,12 @@ function createGetterInvoker(fn) {
   }
 }
 
+// 当前实例vm和我们撰写的methods
 function initMethods(vm: Component, methods: Object) {
   const props = vm.$options.props
   for (const key in methods) {
     if (__DEV__) {
+      // 必须为function类型。
       if (typeof methods[key] !== 'function') {
         warn(
           `Method "${key}" has type "${typeof methods[
@@ -292,9 +301,11 @@ function initMethods(vm: Component, methods: Object) {
           vm
         )
       }
+      // method不能和prop重名
       if (props && hasOwn(props, key)) {
         warn(`Method "${key}" has already been defined as a prop.`, vm)
       }
+      // 命名不能和已有的实例方法冲突。
       if (key in vm && isReserved(key)) {
         warn(
           `Method "${key}" conflicts with an existing Vue instance method. ` +
@@ -302,6 +313,8 @@ function initMethods(vm: Component, methods: Object) {
         )
       }
     }
+    // method核心：它首先判断了我们定义的methods是不是function类型，如果不是则赋值为一个noop空函数，如果是则把这个方法进行bind绑定，其中传入的vm为当前实例。
+    // 这样做的目的是为了把methods方法中的this指向当前实例，方便我们就能在methods方法中通过this.xxx的形式很方便的访问到props、data以及computed等与实例相关的属性或方法。
     vm[key] = typeof methods[key] !== 'function' ? noop : bind(methods[key], vm)
   }
 }
