@@ -104,10 +104,13 @@ export function nextTick(cb?: (...args: any[]) => any, ctx?: object) {
       _resolve(ctx)
     }
   })
+  // 如果pending变量为false（即没有正在等待的回调），则将pending设置为true并调用timerFunc函数
   if (!pending) {
     pending = true
     timerFunc()
   }
+  // 如果回调函数cb不存在并且Promise存在，则返回一个新的Promise对象，其中_resolve为resolve函数  
+  // $flow-disable-line 是用来阻止Flow静态类型检查的注释，表示这行代码不应该被Flow检查  
   // $flow-disable-line
   if (!cb && typeof Promise !== 'undefined') {
     return new Promise(resolve => {
