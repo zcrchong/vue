@@ -28,7 +28,7 @@ export function validateProp(
   const prop = propOptions[key]
   const absent = !hasOwn(propsData, key)
   let value = propsData[key]
-  // boolean casting
+  // 处理Boolean类型的props。
   const booleanIndex = getTypeIndex(Boolean, prop.type)
   if (booleanIndex > -1) {
     if (absent && !hasOwn(prop, 'default')) {
@@ -42,7 +42,7 @@ export function validateProp(
       }
     }
   }
-  // check default value
+  // 处理default默认数据。
   if (value === undefined) {
     value = getPropDefaultValue(vm, prop, key)
     // since the default value is a fresh copy,

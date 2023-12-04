@@ -325,6 +325,13 @@ function normalizeProps(options: Record<string, any>, vm?: Component | null) {
   if (!props) return
   const res: Record<string, any> = {}
   let i, val, name
+  /**
+   * 数组形式：当props是数组时，会首先倒序遍历这个数组，
+   * 然后使用typeof来判断数组元素的类型。
+   * 
+   * 如果不是string类型，则在开发环境下报错，
+   * 如果是string类型，则先把key转化为驼峰形式，然后把这个key赋值到临时的res对象中，此时的键值固定为{ type: null }
+   */
   if (isArray(props)) {
     i = props.length
     while (i--) {
@@ -337,6 +344,7 @@ function normalizeProps(options: Record<string, any>, vm?: Component | null) {
       }
     }
   } else if (isPlainObject(props)) {
+    // 对象形式：当为对象时会使用for-in遍历对象，紧接着和数组形式一样使用camelize来把key转成驼峰形式，然后使用isPlainObject()方法来判断是否为普通对象。如果不是，则转成{ type: Type }对象形式，其中Type为定义key时的Type，如果是，则直接使用这个对象。
     for (const key in props) {
       val = props[key]
       name = camelize(key)
@@ -421,7 +429,7 @@ export function mergeOptions(
     // @ts-expect-error
     child = child.options
   }
-
+  // 规范化props
   normalizeProps(child, vm)
   normalizeInject(child, vm)
   normalizeDirectives(child)

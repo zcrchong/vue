@@ -241,7 +241,9 @@ export function mountComponent(
   }
   return vm
 }
-
+// vm实例为子组件，
+// propsData为父组件中传递的props的值，
+// 而_propKeys是之前props初始化过程中缓存起来的所有的props的key。
 export function updateChildComponent(
   vm: Component,
   propsData: Record<string, any> | null | undefined,
@@ -328,6 +330,11 @@ export function updateChildComponent(
     toggleObserving(false)
     const props = vm._props
     const propKeys = vm.$options._propKeys || []
+    // 在父组件值更新后，会通过遍历propsKey来重新对子组件props进行校验求值，最后赋值。
+    /**
+     * 普通props值被修改：当props值被修改后，其中有段代码props[key] = validateProp(key, propOptions, propsData, vm)根据响应式原理，会触发属性的setter，进而子组件可以重新渲染。
+     * 对象props内部属性变化：当这种情况发生时，并没有触发子组件prop的更新，但是在子组件渲染的时候读取到了props，因此会收集到这个props的render watcher，当对象props内部属性变化的时候，根据响应式原理依然会触发setter，进而子组件可以重新进行渲染。
+     */
     for (let i = 0; i < propKeys.length; i++) {
       const key = propKeys[i]
       const propOptions: any = vm.$options.props // wtf flow?

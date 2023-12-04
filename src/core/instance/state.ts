@@ -68,7 +68,7 @@ export function initState(vm: Component) {
     initWatch(vm, opts.watch)
   }
 }
-
+// 对initProps()方法进行总结，它主要做三件事情：props校验和求值、props响应式和props代理。
 function initProps(vm: Component, propsOptions: Object) {
   const propsData = vm.$options.propsData || {}
   const props = (vm._props = shallowReactive({}))
@@ -82,6 +82,7 @@ function initProps(vm: Component, propsOptions: Object) {
   }
   for (const key in propsOptions) {
     keys.push(key)
+    // prop校验
     const value = validateProp(key, propsOptions, propsData, vm)
     /* istanbul ignore else */
     if (__DEV__) {
@@ -95,6 +96,7 @@ function initProps(vm: Component, propsOptions: Object) {
           vm
         )
       }
+      // 响应式：在开发环境下，props的响应式劫持了setter方法，这样做的是为了保证props为单项数据流：既我们不能在子组件中直接修改父组件传递的props值。
       defineReactive(props, key, value, () => {
         if (!isRoot && !isUpdatingChildComponent) {
           warn(
@@ -112,6 +114,7 @@ function initProps(vm: Component, propsOptions: Object) {
     // static props are already proxied on the component's prototype
     // during Vue.extend(). We only need to proxy props defined at
     // instantiation here.
+    // 代理
     if (!(key in vm)) {
       proxy(vm, `_props`, key)
     }

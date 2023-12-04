@@ -19,10 +19,10 @@ import { setCurrentInstance } from 'v3/currentInstance'
 import { syncSetupSlots } from 'v3/apiSetup'
 
 export function initRender(vm: Component) {
-  vm._vnode = null // the root of the child tree
-  vm._staticTrees = null // v-once cached trees
+  vm._vnode = null // 子树的根节点  
+  vm._staticTrees = null // v-once的缓存树  
   const options = vm.$options
-  const parentVnode = (vm.$vnode = options._parentVnode!) // the placeholder node in parent tree
+  const parentVnode = (vm.$vnode = options._parentVnode!) // 父树中的占位符节点  
   const renderContext = parentVnode && (parentVnode.context as Component)
   vm.$slots = resolveSlots(options._renderChildren, renderContext)
   vm.$scopedSlots = parentVnode
@@ -32,19 +32,16 @@ export function initRender(vm: Component) {
         vm.$slots
       )
     : emptyObject
-  // bind the createElement fn to this instance
-  // so that we get proper render context inside it.
-  // args order: tag, data, children, normalizationType, alwaysNormalize
-  // internal version is used by render functions compiled from templates
+  // 将createElement函数绑定到该实例上，以便在内部获得正确的渲染上下文  
+  // 参数顺序：标签，数据，子节点，标准化类型，始终标准化  
+  // 内部版本由从模板编译的渲染函数使用  
   // @ts-expect-error
   vm._c = (a, b, c, d) => createElement(vm, a, b, c, d, false)
-  // normalization is always applied for the public version, used in
-  // user-written render functions.
+  // 标准化对于公共版本始终应用于用户编写的渲染函数中  
   // @ts-expect-error
   vm.$createElement = (a, b, c, d) => createElement(vm, a, b, c, d, true)
 
-  // $attrs & $listeners are exposed for easier HOC creation.
-  // they need to be reactive so that HOCs using them are always updated
+  // $attrs & $listeners 被暴露出来以便于创建Higher-Order Components (HOC) 它们必须是响应式的，这样使用它们的HOC就可以始终被更新
   const parentData = parentVnode && parentVnode.data
 
   /* istanbul ignore else */
@@ -91,15 +88,16 @@ export let currentRenderingInstance: Component | null = null
 export function setCurrentRenderingInstance(vm: Component) {
   currentRenderingInstance = vm
 }
-
+// 主要在Vue.prototype上定义各种私有方法和一个非常重要的实例方法：$nextTick
 export function renderMixin(Vue: typeof Component) {
   // install runtime convenience helpers
+  // 它会在Vue.prototype上挂载各种私有方法，例如this._n = toNumber、this._s = toString、this._v = createTextVNode和this._e = createEmptyVNode。
   installRenderHelpers(Vue.prototype)
-
+  // nextTick会在Vue构造函数上挂载一个全局的nextTick()方法，而此处为实例方法，本质上引用的是同一个nextTick。
   Vue.prototype.$nextTick = function (fn: (...args: any[]) => any) {
     return nextTick(fn, this)
   }
-
+  // _render()方法会把模板编译成VNode
   Vue.prototype._render = function (): VNode {
     const vm: Component = this
     const { render, _parentVnode } = vm.$options
