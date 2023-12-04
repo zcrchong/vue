@@ -35,7 +35,7 @@ export function initMixin(Vue: typeof Component) {
     // effect scope
     vm._scope = new EffectScope(true /* detached */)
     vm._scope._vm = true
-    // merge options
+    // 1. 合并配置
     if (options && options._isComponent) {
       // optimize internal component instantiation
       // since dynamic options merging is pretty slow, and none of the
@@ -48,13 +48,15 @@ export function initMixin(Vue: typeof Component) {
         vm
       )
     }
+    // 2.render代理
     /* istanbul ignore else */
     if (__DEV__) {
       initProxy(vm)
     } else {
       vm._renderProxy = vm
     }
-    // expose real self
+    // 3.初始化生命周期、初始化事件中心、初始化inject，
+    //  初始化state、初始化provide、调用生命周期
     vm._self = vm
     initLifecycle(vm)
     initEvents(vm)
@@ -71,7 +73,7 @@ export function initMixin(Vue: typeof Component) {
       mark(endTag)
       measure(`vue ${vm._name} init`, startTag, endTag)
     }
-
+    // 4. 挂载
     if (vm.$options.el) {
       vm.$mount(vm.$options.el)
     }
