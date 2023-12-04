@@ -332,10 +332,12 @@ function createWatcher(
   return vm.$watch(expOrFn, handler, options)
 }
 
+// stateMixin主要是处理跟实例相关的属性和方法，它会在Vue.prototype上定义实例会使用到的属性或者方法，
 export function stateMixin(Vue: typeof Component) {
   // flow somehow has problems with directly declared definition object
   // when using Object.defineProperty, so we have to procedurally build up
   // the object here.
+  // $data和$prop相关
   const dataDef: any = {}
   dataDef.get = function () {
     return this._data
@@ -344,6 +346,11 @@ export function stateMixin(Vue: typeof Component) {
   propsDef.get = function () {
     return this._props
   }
+  /**
+   * 我们发现$data和$props分别是_data和_props的访问代理，从命名中我们可以推测，以下划线开头的变量，我们一般认为是私有变量，
+   * 然后通过$data和$props来提供一个对外的访问接口，虽然可以通过属性的get()方法去取，但对于这两个私有变量来说是并不能随意set，
+   * 对于data来说不能替换根实例，而对于props来说它是只读的。因此在原版源码中，还劫持了set()方法，当设置$data或者$props时会报错：
+   */
   if (__DEV__) {
     dataDef.set = function () {
       warn(
@@ -358,10 +365,11 @@ export function stateMixin(Vue: typeof Component) {
   }
   Object.defineProperty(Vue.prototype, '$data', dataDef)
   Object.defineProperty(Vue.prototype, '$props', propsDef)
-
+  // 定义$set, $delete, $watch
+  // $set和$delete：set和delete这两个方法被定义在跟instance目录平级的observer目录下，在stateMixin()中，它们分别赋值给了$set和$delete方法，而在initGlobalAPI中，也同样使用到了这两个方法，只不过一个是全局方法，一个是实例方法。
   Vue.prototype.$set = set
   Vue.prototype.$delete = del
-
+  // $watch：在stateMixin()方法中，详细实现了$watch()方法，此方法实现的核心是通过一个watcher实例来监听。当取消监听时，同样是使用watcher实例相关的方法
   Vue.prototype.$watch = function (
     expOrFn: string | (() => any),
     cb: any,
