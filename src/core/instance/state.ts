@@ -66,6 +66,7 @@ export function initState(vm: Component) {
     const ob = observe((vm._data = {}))
     ob && ob.vmCount++
   }
+  // 计算属性
   if (opts.computed) initComputed(vm, opts.computed)
   if (opts.watch && opts.watch !== nativeWatch) {
     initWatch(vm, opts.watch)
@@ -183,13 +184,25 @@ export function getData(data: Function, vm: Component): any {
 }
 
 const computedWatcherOptions = { lazy: true }
-
+/**
+ * 
+ * @param vm 
+ * @param computed 
+ * computed计算属性是依赖于其它响应式变量的，因此我们分析computed的时候会分为两个步骤：computed初始化和computed更新
+ */
 function initComputed(vm: Component, computed: Object) {
+  // _computedWatchers:这个变量的作用是缓存当前实例所有计算属性的watcher。
   // $flow-disable-line
   const watchers = (vm._computedWatchers = Object.create(null))
   // computed properties are just getters during SSR
   const isSSR = isServerRendering()
-
+  /**
+   * 接下来遍历所有的computed，
+   * 然后对每一个computed进行类型判断，
+   *  如果是function类型，那么直接使用，
+   *  如果是对象则代表是get/set形式，则直接取get。
+   *  如果最后获取到的computed的getter为null，则在开发环境下提示错误。
+   *  */ 
   for (const key in computed) {
     const userDef = computed[key]
     const getter = isFunction(userDef) ? userDef : userDef.get
@@ -207,9 +220,13 @@ function initComputed(vm: Component, computed: Object) {
       )
     }
 
-    // component-defined computed properties are already defined on the
-    // component prototype. We only need to define computed properties defined
-    // at instantiation here.
+    // component-defined computed properties are already defined on the component prototype. We only need to define computed properties defined at instantiation here.
+    /**
+     * 首先判断了当前遍历的computed是否已经在vm实例上，
+     *  如果不在则调用defineComputed()方法，
+     *  如果在还需要判断当前遍历的computed是否和props、data命名冲突，
+     *  如果冲突则提示错误。
+     */
     if (!(key in vm)) {
       defineComputed(vm, key, userDef)
     } else if (__DEV__) {
@@ -226,7 +243,15 @@ function initComputed(vm: Component, computed: Object) {
     }
   }
 }
-
+/**
+ * 
+ * @param target 
+ * @param key 
+ * @param userDef 
+ * 根据不同的类型的computed，对sharedPropertyDefinition的get和set进行赋值。
+ * sharedPropertyDefinition在之前的proxy中， 它就是Object.defineProperty()方法descriptor参数的一个共享配置。
+ * 在非SSR服务端渲染的情况，sharedPropertyDefinition.get的值是调用了createComputedGetter()方法，而在SSR服务端渲染的情况下是调用了createGetterInvoker()方法。
+ */
 export function defineComputed(
   target: any,
   key: string,
@@ -258,10 +283,12 @@ export function defineComputed(
 }
 
 function createComputedGetter(key) {
+  // computedGetter函数会在获取computed的时候被调用
   return function computedGetter() {
     const watcher = this._computedWatchers && this._computedWatchers[key]
     if (watcher) {
       if (watcher.dirty) {
+        // 触发computed的getter进行求值，然后把dirty设置为false
         watcher.evaluate()
       }
       if (Dep.target) {

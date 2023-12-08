@@ -37,6 +37,7 @@ export default class Dep {
 
   constructor() {
     this.id = uid++
+    // 依赖收集数组
     this.subs = []
   }
 
@@ -67,7 +68,7 @@ export default class Dep {
       }
     }
   }
-
+  // 在notify()方法调用时，会遍历subs数组，然后依次调用当前watcher的update方法。其中update方法是定义在Watcher类中的一个实例方法
   notify(info?: DebuggerEventExtraInfo) {
     // stabilize the subscriber list first
     const subs = this.subs.filter(s => s) as DepTarget[]
